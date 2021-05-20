@@ -1,8 +1,10 @@
-PROGS = listfiles
-all:	$(PROGS)
+CC=gcc
+TARGET=myls
 
-%:	%.c $(LIBAPUE)
-	gcc $(CFLAGS) $@.c -o $@ $(LDFLAGS) $(LDLIBS)
+all: $(TARGET)
+
+$(TARGET): myls.o confParser.o
+	$(CC) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 clean:
-	rm -f $(PROGS) $(TEMPFILES) *.o
+	rm -f  *.o $(TARGET)
