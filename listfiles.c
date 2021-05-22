@@ -99,29 +99,25 @@ int main(int argc, char **argv)
     struct dirent *d;
     char filename[BUFSIZ + 1];
     /* For each directory on the command line... */
-    while (--argc)
+    dirname = realpath(*++argv, NULL);
+    /* Open the directory */
+    if ((dp = opendir(dirname)) == NULL)
     {
-        dirname = realpath(*++argv, NULL);
-        /* Open the directory */
-        if ((dp = opendir(dirname)) == NULL)
-        {
-            perror(dirname);
-            continue;
-        }
-        printf("%s:\n", *argv);
-
-        while ((d = readdir(dp)) != NULL)
-        { /* For each file in the directory... */
-            /* Create the full file name. */
-            sprintf(filename, "%s/%s", dirname, d->d_name);
-            if (lstat(filename, &st) < 0) /* Find out about it. */
-                perror(filename);
-            outputStatInfo(filename, d->d_name, &st); /* Print out the info. */
-            putchar('\n');
-        }
-        putchar('\n');
-        closedir(dp);
-        free(dirname);
+        perror(dirname);
+        return -1;
     }
+    printf("%s:\n", *argv);
+
+    while ((d = readdir(dp)) != NULL)
+    { /* For each file in the directory... */
+        /* Create the full file name. */
+        sprintf(filename, "%s/%s", dirname, d->d_name);
+        if (lstat(filename, &st) < 0) /* Find out about it. */
+            perror(filename);
+        outputStatInfo(filename, d->d_name, &st); /* Print out the info. */
+        putchar('\n');
+    }
+    closedir(dp);
+    free(dirname);
     return 0;
 }

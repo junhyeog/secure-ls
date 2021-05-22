@@ -12,7 +12,15 @@
 
 #include "confParser.h"
 
-char PATH[15] = "/etc/myls.conf";
+const char PATH[15] = "/etc/myls.conf";
+
+void clearFilterList(filterList *ftList)
+{
+    int sz = ftList->size;
+    while (--sz >= 0)
+        free(ftList->arr[sz]);
+    return;
+}
 
 void stripLine(char *line, char *dest)
 {
@@ -51,7 +59,7 @@ int getWord(char *line, char *dest)
         }
     }
     dest[j] = '\0';
-    printf("Got word : %s\n", dest);
+    // printf("Got word : %s\n", dest);
     return i;
 }
 
@@ -98,7 +106,7 @@ int permStrToMode(char *perm, mode_t *mode)
 
 int parseOption(char *option, filter *ft)
 {
-    printf("parseOption - option: %s\n", option);
+    // printf("parseOption - option: %s\n", option);
     int optionLen = strlen(option);
     // Check setuid
     if (strncmp(option, "setuid", optionLen + 1) == 0)
@@ -124,14 +132,46 @@ int parseOption(char *option, filter *ft)
         ft->flag_worldwritable = 1;
         return 0;
     }
-    // Check PERM
-    if (strncmp(option, "PERM:", 5) == 0)
+    // Check mtime file
+    if (strncmp(option, "MMIN:", 5) == 0)
     {
-        ft->flag_perm = 1;
-        if (permStrToMode(option, ft->perm) < 0)
-            return -1;
+        char *tmp = malloc(optionLen);
+        for (int i = 5; i < optionLen; i++)
+        {
+            tmp[i - 5] = option[i];
+        }
+        ft->mmin_n = atoi(tmp);
+        ft->flag_mmin = 1;
+        free(tmp);
         return 0;
     }
+    // Check atime file
+    if (strncmp(option, "AMIN:", 5) == 0)
+    {
+        char *tmp = malloc(optionLen);
+        for (int i = 5; i < optionLen; i++)
+        {
+            tmp[i - 5] = option[i];
+        }
+        ft->amin_n = atoi(tmp);
+        ft->flag_amin = 1;
+        free(tmp);
+        return 0;
+    }
+    // Check ctime file
+    if (strncmp(option, "CMIN:", 5) == 0)
+    {
+        char *tmp = malloc(optionLen);
+        for (int i = 5; i < optionLen; i++)
+        {
+            tmp[i - 5] = option[i];
+        }
+        ft->cmin_n = atoi(tmp);
+        ft->flag_cmin = 1;
+        free(tmp);
+        return 0;
+    }
+
     return -1;
 }
 
@@ -193,8 +233,11 @@ int parseLine(char *line, filter *ft)
         free(path), free(stripedLine);
         return -1;
     }
-    strcpy(ft->path, path);
-    free(path);
+    char *abPath = malloc(PATH_MAX);
+    memset(abPath, 0, sizeof(*abPath) * PATH_MAX);
+    realpath(path, abPath);
+    strcpy(ft->abPath, abPath);
+    free(path), free(abPath);
     // Get options
     lineLen -= i;
     char *options = malloc(lineLen);
@@ -219,7 +262,7 @@ int parseLine(char *line, filter *ft)
     return 0;
 }
 
-int parseConf(char *path, filter *ft)
+int parseConf(char *path, filterList *ftList)
 {
     // Set conf file path
     char confPath[PATH_MAX];
@@ -240,16 +283,19 @@ int parseConf(char *path, filter *ft)
         perror("Fail to open conf file");
         return -1;
     }
-    memset(ft, 0, sizeof(*ft));
     while ((nread = getline(&line, &len, fp)) != -1)
     {
-        printf("--------------------\n");
-        printf("Retrieved line of length %zu:\n", nread);
-        printf("line: %s\n", line);
+        filter *ft = malloc(sizeof(filter));
+        memset(ft, 0, sizeof(*ft));
         if (parseLine(line, ft) < 0)
         {
             perror("Fail to parse a line");
+            free(ft);
             return -1;
+        }
+        else
+        {
+            ftList->arr[(ftList->size)++] = ft;
         }
     }
 
