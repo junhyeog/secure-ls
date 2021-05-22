@@ -26,7 +26,6 @@ typedef struct _filterList
 void clearFilterList(filterList *ftList);
 void stripLine(char *line, char *dest);
 int getWord(char *line, char *dest);
-int permStrToMode(char *perm, mode_t *mode);
 int parseOption(char *option, filter *ft);
 int parseOptions(char *options, filter *ft);
 int parseLine(char *line, filter *ft);

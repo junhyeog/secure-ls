@@ -19,6 +19,8 @@
 
 #include "confParser.h"
 
+const char PATH[15] = "/etc/myls.conf";
+
 void printWarn(char *option)
 {
     printf("[!] Warning: %s file found.\n", option);
@@ -189,7 +191,6 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-
     if (argc <= 1)
     {
         usage();
@@ -198,15 +199,15 @@ int main(int argc, char *argv[])
 
     bool flag_s = 0;
     int i = 1;
+    filterList *ftList;
+    ftList = malloc(sizeof(filterList));
+    memset(ftList, 0, sizeof(*ftList));
     if (strncmp("-S", argv[1], 3) == 0)
     {
         flag_s = 1;
         i++;
+        parseConf(PATH, ftList);
     }
-    filterList *ftList = malloc(sizeof(filterList));
-    memset(ftList, 0, sizeof(*ftList));
-    char test[12] = "./test.conf";
-    parseConf(test, ftList);
 
     DIR *dp;
     char *dirname;
@@ -216,8 +217,12 @@ int main(int argc, char *argv[])
     /* For each directory on the command line... */
     for (; i < argc; i++)
     {
-
         dirname = realpath(argv[i], NULL);
+        if (dirname == NULL)
+        {
+            perror(dirname);
+            continue;
+        }
         /* Open the directory */
         if ((dp = opendir(dirname)) == NULL)
         {
@@ -234,7 +239,6 @@ int main(int argc, char *argv[])
                 perror(filename);
             if (flag_s)
             {
-
                 if (filtering(dirname, d->d_name, &st, ftList))
                 {
                     outputStatInfo(filename, d->d_name, &st); /* Print out the info. */

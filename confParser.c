@@ -12,8 +12,6 @@
 
 #include "confParser.h"
 
-const char PATH[15] = "/etc/myls.conf";
-
 void clearFilterList(filterList *ftList)
 {
     for (int i = 0; i < ftList->size; i++)
@@ -59,54 +57,11 @@ int getWord(char *line, char *dest)
         }
     }
     dest[j] = '\0';
-    // printf("Got word : %s\n", dest);
     return i;
-}
-
-int permStrToMode(char *perm, mode_t *mode)
-{
-    if (perm[0] == 'r')
-        *mode |= 0400;
-    else if (perm[0] != '-')
-        return -1;
-    if (perm[1] == 'w')
-        *mode |= 0200;
-    else if (perm[1] != '-')
-        return -1;
-    if (perm[2] == 'x')
-        *mode |= 0100;
-    else if (perm[2] != '-')
-        return -1;
-    if (perm[3] == 'r')
-        *mode |= 0040;
-    else if (perm[3] != '-')
-        return -1;
-    if (perm[4] == 'w')
-        *mode |= 0020;
-    else if (perm[4] != '-')
-        return -1;
-    if (perm[5] == 'x')
-        *mode |= 0010;
-    else if (perm[5] != '-')
-        return -1;
-    if (perm[6] == 'r')
-        *mode |= 0004;
-    else if (perm[6] != '-')
-        return -1;
-    if (perm[7] == 'w')
-        *mode |= 0002;
-    else if (perm[7] != '-')
-        return -1;
-    if (perm[8] == 'x')
-        *mode |= 0001;
-    else if (perm[8] != '-')
-        return -1;
-    return 0;
 }
 
 int parseOption(char *option, filter *ft)
 {
-    // printf("parseOption - option: %s\n", option);
     int optionLen = strlen(option);
     // Check setuid
     if (strncmp(option, "setuid", optionLen + 1) == 0)
@@ -171,7 +126,6 @@ int parseOption(char *option, filter *ft)
         free(tmp);
         return 0;
     }
-
     return -1;
 }
 
@@ -264,22 +218,15 @@ int parseLine(char *line, filter *ft)
 
 int parseConf(char *path, filterList *ftList)
 {
-    // Set conf file path
-    char confPath[PATH_MAX];
-    if (path == NULL)
-        strcpy(confPath, PATH);
-    else
-        strcpy(confPath, path);
-
     FILE *fp;
     char *line = NULL;
     size_t len = 0;
     ssize_t nread;
 
-    fp = fopen(confPath, "r");
+    fp = fopen(path, "r");
     if (fp == NULL)
     {
-        printf("confPath: %s\n", confPath);
+        printf("path: %s\n", path);
         perror("Fail to open conf file");
         return -1;
     }
