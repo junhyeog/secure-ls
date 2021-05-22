@@ -16,9 +16,9 @@ const char PATH[15] = "/etc/myls.conf";
 
 void clearFilterList(filterList *ftList)
 {
-    int sz = ftList->size;
-    while (--sz >= 0)
-        free(ftList->arr[sz]);
+    for (int i = 0; i < ftList->size; i++)
+        free(ftList->arr[i]);
+    ftList->size = 0;
     return;
 }
 
